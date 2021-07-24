@@ -1,0 +1,104 @@
+class CELL_GRID
+
+access "Initialization" {Any}
+
+	constructor (dimensions:Integer) {
+			"Initialization for `Current'."
+		pre {
+			dimensions > 0
+		}
+			
+		dim = dimensions
+		construct current_grid.make_filled (False, dim, dim)
+	post {
+		dim == dimensions
+		current_grid /= void
+	}
+
+access "Access"
+
+	var dim: Integer
+			// Grid dimension.
+
+	cell_at (i, j: Integer): Boolean {
+			"Value of cell at (i , j)"
+		pre {
+			i >= 1 and j >= 1
+			i <= dim and j <=dim
+		}
+		Result = current_grid[i,j]
+	post {
+		Result = current_grid[i,j]
+	}
+
+access "Status Setting"
+
+	set_cell_status (b: Boolean; i, j: Integer)
+			"Set status of cell at (i , j)"
+		pre {
+			i >= 1 and j >= 1
+			i <= dim and j <=dim
+		}
+		current_grid[i,j] = b
+	post {
+		current_grid[i,j] == b
+	}
+
+access "Basic operations"
+
+	compute_next_generation() {
+		"Compute next generation of cells."
+
+		var	i,j:Integer
+		var	living_neighbors:Integer
+		var	temp_grid:ARRAY2[Boolean]
+
+		{
+			construct temp_grid.make_filled (False, dim, dim)
+			temp_grid.copy (current_grid)
+			iterate from 1 to current_grid.height+1 with i  {
+				iterate from 1 to current_grid.width+1 with j { 
+					living_neighbors= 0
+					if i > 1 {
+						if j>1 && temp_grid[i-1,j-1] { living_neighbors = living_neighbors + 1 }
+						if temp_grid[i-1,j] { living_neighbors = living_neighbors + 1 }
+						if j<dim && temp_grid[i-1,j+1] { living_neighbors = living_neighbors + 1 }
+					}
+
+					if j>1 && temp_grid[i,j-1] { living_neighbors = living_neighbors + 1 }
+					if j<dim && temp_grid[i,j+1] { living_neighbors = living_neighbors + 1 }
+					if i < dim {
+						if j>1 && temp_grid[i+1,j-1] { living_neighbors = living_neighbors + 1 }
+						if temp_grid[i+1,j] { living_neighbors = living_neighbors + 1 }
+						if j<dim && temp_grid[i+1,j+1] { living_neighbors = living_neighbors + 1 }
+					}
+					set_cell_status (new_state_of_cell(i,j, living_neighbors),i,j)
+					j = j + 1
+				}
+				i = i + 1
+			}
+
+		}
+
+access "Implementation" {Any}
+
+
+	var current_grid: ARRAY2 [Boolean]
+			// Grid representation as a matrix of Boolean cells (”True” means alive for a cell )
+
+	new_state_of_cell (i, j, living_neighbors: Integer): Boolean {
+			"Apply Conway's Game of Life rules to compute new state for cell at (i,j) given a number of `living neighbors'"
+		pre {
+			i >= 1 && j >= 1
+			i <= dim && j <=dim
+			living_neighbors >= 0 && living_neighbors <=8
+		}
+		if living_neighbors == 3 {
+			Result = true
+		elseif current_grid[i,j] /*??*/ && living_neighbors == 2 {
+			Result = true
+		}
+	}
+
+}
+
